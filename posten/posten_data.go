@@ -2,7 +2,6 @@ package posten
 
 import (
 	"fmt"
-	"time"
 )
 
 type PostenResponse struct {
@@ -82,7 +81,7 @@ type Address struct {
 	AddressTextWithoutAddressAdditionalName string                `json:"adressetekstutenadressetilleggsnavn"`
 	LocationVerified                        bool                  `json:"stedfestingverifisert"`
 	PointOfRepresentation                   PointOfRepresentation `json:"representasjonspunkt"`
-	UpdateDate                              time.Time             `json:"oppdateringsdato"`
+	UpdateDate                              string                `json:"oppdateringsdato"`
 }
 
 func (a *Address) GetPointOfRepresentation() PointOfRepresentation {

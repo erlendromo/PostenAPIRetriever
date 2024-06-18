@@ -10,6 +10,8 @@ import (
 func main() {
 	postenData, _ := posten.NewPostenResponse(context.Background(), "2822")
 
+	fmt.Printf("%v\n\n\n", postenData)
+
 	data, _ := postenData.ExtractValuableData()
 
 	fmt.Printf("%+v\n", data)
