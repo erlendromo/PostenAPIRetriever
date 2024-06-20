@@ -10,8 +10,8 @@ import (
 	"github.com/erlendromo/PostenAPIRetriever/utils"
 )
 
-// Returns the complete json-response from Posten-API
-func NewPostenResponse(ctx context.Context, postalcode string) (*PostenResponse, error) {
+// Returns the json-response from Posten-API (complete response if 'complete' tag is not nil)
+func NewPostenResponse(ctx context.Context, postalcode string, complete ...bool) (DataResponse, error) {
 	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -21,7 +21,7 @@ func NewPostenResponse(ctx context.Context, postalcode string) (*PostenResponse,
 	}
 
 	client := &http.Client{
-		Timeout: time.Second * 2,
+		Timeout: time.Millisecond * 500,
 	}
 
 	resp, err := client.Do(req)
@@ -38,5 +38,9 @@ func NewPostenResponse(ctx context.Context, postalcode string) (*PostenResponse,
 		return nil, fmt.Errorf("no addresses registered")
 	}
 
-	return &postenResponse, err
+	if complete != nil {
+		return postenResponse.completeData()
+	}
+
+	return postenResponse.extractedData()
 }

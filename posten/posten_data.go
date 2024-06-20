@@ -5,16 +5,88 @@ import (
 )
 
 type PostenResponse struct {
-	Metadata Metadata  `json:"metadata"`
-	Adresses []Address `json:"adresser"`
+	Metadata struct {
+		Page            int    `json:"side"`
+		HitsPerPage     int    `json:"treffPerSide"`
+		ShowsTo         int    `json:"viserTil"`
+		SokeStreng      string `json:"sokeStreng"`
+		AsciiCompatible bool   `json:"asciiKompatibel"`
+		ShowsFrom       int    `json:"viserFra"`
+		TotalHits       int    `json:"totaltAntallTreff"`
+	} `json:"metadata"`
+	Addresses []struct {
+		AddressName                             string   `json:"addressenavn"`
+		AddressText                             string   `json:"addressetekst"`
+		AddressAdditionalName                   string   `json:"addressetilleggsnavn"`
+		AddressCode                             int      `json:"addressekode"`
+		Number                                  int      `json:"nummer"`
+		Letter                                  string   `json:"bokstav"`
+		MunicipalityNumber                      string   `json:"kommunenummer"`
+		MunicipalityName                        string   `json:"kommunenavn"`
+		YardNumber                              int      `json:"gardsnummer"`
+		UseNumber                               int      `json:"bruksnummer"`
+		AttachmentNumber                        int      `json:"festenummer"`
+		SubNumber                               int      `json:"undernummer"`
+		UtilityUnitNumber                       []string `json:"bruksenhetsnummer"`
+		ObjectType                              string   `json:"objtype"`
+		PostalPlace                             string   `json:"poststed"`
+		PostalNumber                            string   `json:"postnummer"`
+		AddressTextWithoutAddressAdditionalName string   `json:"adressetekstutenadressetilleggsnavn"`
+		LocationVerified                        bool     `json:"stedfestingverifisert"`
+		PointOfRepresentation                   struct {
+			EPSG      string  `json:"epsg"`
+			Latitude  float64 `json:"lat"`
+			Longitude float64 `json:"lon"`
+		} `json:"representasjonspunkt"`
+		UpdateDate string `json:"oppdateringsdato"`
+	} `json:"adresser"`
 }
 
-func (pr *PostenResponse) GetMetadata() Metadata {
-	return pr.Metadata
+type DataResponse interface{}
+
+type CompleteData struct {
+	AddressName                             string   `json:"addressenavn"`
+	AddressText                             string   `json:"addressetekst"`
+	AddressAdditionalName                   string   `json:"addressetilleggsnavn"`
+	AddressCode                             int      `json:"addressekode"`
+	Number                                  int      `json:"nummer"`
+	Letter                                  string   `json:"bokstav"`
+	MunicipalityNumber                      string   `json:"kommunenummer"`
+	MunicipalityName                        string   `json:"kommunenavn"`
+	YardNumber                              int      `json:"gardsnummer"`
+	UseNumber                               int      `json:"bruksnummer"`
+	AttachmentNumber                        int      `json:"festenummer"`
+	SubNumber                               int      `json:"undernummer"`
+	UtilityUnitNumber                       []string `json:"bruksenhetsnummer"`
+	ObjectType                              string   `json:"objtype"`
+	PostalPlace                             string   `json:"poststed"`
+	PostalNumber                            string   `json:"postnummer"`
+	AddressTextWithoutAddressAdditionalName string   `json:"adressetekstutenadressetilleggsnavn"`
+	LocationVerified                        bool     `json:"stedfestingverifisert"`
+	PointOfRepresentation                   struct {
+		EPSG      string  `json:"epsg"`
+		Latitude  float64 `json:"lat"`
+		Longitude float64 `json:"lon"`
+	} `json:"representasjonspunkt"`
+	UpdateDate string `json:"oppdateringsdato"`
 }
 
-func (pr *PostenResponse) GetAddresses() []Address {
-	return pr.Adresses
+type ExtractedData struct {
+	Coordinates struct {
+		Latitude  float64 `json:"latitude"`
+		Longitude float64 `json:"longitude"`
+	} `json:"coordinates"`
+	MunicipalityName string `json:"municipality_name"`
+	PostalPlace      string `json:"postal_place"`
+	PostalNumber     string `json:"postal_number"`
+}
+
+func (pr *PostenResponse) completeData() (DataResponse, error) {
+	if len(pr.Addresses) == 0 {
+		return CompleteData{}, fmt.Errorf("no addresses registered")
+	}
+
+	return pr.Addresses[0], nil
 }
 
 // Returns the following fields from the original Posten-API response:
@@ -22,79 +94,22 @@ func (pr *PostenResponse) GetAddresses() []Address {
 //   - Municipality name
 //   - Postalplace
 //   - Postalnumber
-func (pr *PostenResponse) ExtractValuableData() (*ValuableData, error) {
-	addresses := pr.GetAddresses()
+func (pr *PostenResponse) extractedData() (DataResponse, error) {
+	addresses := pr.Addresses
 	if len(addresses) == 0 {
-		return nil, fmt.Errorf("no addresses registered")
+		return ExtractedData{}, fmt.Errorf("no addresses registered")
 	}
-	data := addresses[0]
 
-	return &ValuableData{
-		Coordinates: Coordinates{
-			Latitude:  data.PointOfRepresentation.Latitude,
-			Longitude: data.PointOfRepresentation.Longitude,
+	return ExtractedData{
+		Coordinates: struct {
+			Latitude  float64 `json:"latitude"`
+			Longitude float64 `json:"longitude"`
+		}{
+			Latitude:  addresses[0].PointOfRepresentation.Latitude,
+			Longitude: addresses[0].PointOfRepresentation.Longitude,
 		},
-		MunicipalityName: data.MunicipalityName,
-		PostalPlace:      data.PostalPlace,
-		PostalNumber:     data.PostalNumber,
+		MunicipalityName: addresses[0].MunicipalityName,
+		PostalPlace:      addresses[0].PostalPlace,
+		PostalNumber:     addresses[0].PostalNumber,
 	}, nil
-}
-
-type ValuableData struct {
-	Coordinates      Coordinates `json:"coordinates"`
-	MunicipalityName string      `json:"municipality_name"`
-	PostalPlace      string      `json:"postal_place"`
-	PostalNumber     string      `json:"postal_number"`
-}
-
-func (vd *ValuableData) GetCoordinates() Coordinates {
-	return vd.Coordinates
-}
-
-type Coordinates struct {
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-}
-
-type Metadata struct {
-	Page            int    `json:"side"`
-	HitsPerPage     int    `json:"treffPerSide"`
-	ShowsTo         int    `json:"viserTil"`
-	SokeStreng      string `json:"sokeStreng"`
-	AsciiCompatible bool   `json:"asciiKompatibel"`
-	ShowsFrom       int    `json:"viserFra"`
-	TotalHits       int    `json:"totaltAntallTreff"`
-}
-
-type Address struct {
-	AddressName                             string                `json:"addressenavn"`
-	AddressText                             string                `json:"addressetekst"`
-	AddressAdditionalName                   string                `json:"addressetilleggsnavn"`
-	AddressCode                             int                   `json:"addressekode"`
-	Number                                  int                   `json:"nummer"`
-	Letter                                  string                `json:"bokstav"`
-	MunicipalityNumber                      string                `json:"kommunenummer"`
-	MunicipalityName                        string                `json:"kommunenavn"`
-	YardNumber                              int                   `json:"gardsnummer"`
-	UseNumber                               int                   `json:"bruksnummer"`
-	AttachmentNumber                        int                   `json:"festenummer"`
-	SubNumber                               int                   `json:"undernummer"`
-	UtilityUnitNumber                       []string              `json:"bruksenhetsnummer"`
-	ObjectType                              string                `json:"objtype"`
-	PostalPlace                             string                `json:"poststed"`
-	PostalNumber                            string                `json:"postnummer"`
-	AddressTextWithoutAddressAdditionalName string                `json:"adressetekstutenadressetilleggsnavn"`
-	LocationVerified                        bool                  `json:"stedfestingverifisert"`
-	PointOfRepresentation                   PointOfRepresentation `json:"representasjonspunkt"`
-	UpdateDate                              string                `json:"oppdateringsdato"`
-}
-
-func (a *Address) GetPointOfRepresentation() PointOfRepresentation {
-	return a.PointOfRepresentation
-}
-
-type PointOfRepresentation struct {
-	EPSG      string  `json:"epsg"`
-	Latitude  float64 `json:"lat"`
-	Longitude float64 `json:"lon"`
 }

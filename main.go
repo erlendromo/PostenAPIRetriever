@@ -9,15 +9,10 @@ import (
 )
 
 func main() {
-	postenData, err := posten.NewPostenResponse(context.Background(), "0010")
+	postenData, err := posten.NewPostenResponse(context.Background(), "2372")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	data, err := postenData.ExtractValuableData()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("%+v\n", data)
+	fmt.Printf("%v\n", postenData)
 }
