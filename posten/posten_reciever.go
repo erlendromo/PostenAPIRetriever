@@ -30,6 +30,13 @@ func NewPostenResponse(ctx context.Context, postalcode string) (*PostenResponse,
 	}
 
 	var postenResponse PostenResponse
-	err = json.NewDecoder(resp.Body).Decode(&postenResponse)
+	if err = json.NewDecoder(resp.Body).Decode(&postenResponse); err != nil {
+		return nil, err
+	}
+
+	if postenResponse.Metadata.TotalHits == 0 {
+		return nil, fmt.Errorf("no addresses registered")
+	}
+
 	return &postenResponse, err
 }
