@@ -3,16 +3,21 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/erlendromo/PostenAPIRetriever/posten"
 )
 
 func main() {
-	postenData, _ := posten.NewPostenResponse(context.Background(), "2822")
+	postenData, err := posten.NewPostenResponse(context.Background(), "0010")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	fmt.Printf("%v\n\n\n", postenData)
-
-	data, _ := postenData.ExtractValuableData()
+	data, err := postenData.ExtractValuableData()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	fmt.Printf("%+v\n", data)
 }

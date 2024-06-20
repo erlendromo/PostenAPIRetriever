@@ -17,6 +17,11 @@ func (pr *PostenResponse) GetAddresses() []Address {
 	return pr.Adresses
 }
 
+// Returns the following fields from the original Posten-API response:
+//   - Coordinates (Latitude & Longitude)
+//   - Municipality name
+//   - Postalplace
+//   - Postalnumber
 func (pr *PostenResponse) ExtractValuableData() (*ValuableData, error) {
 	addresses := pr.GetAddresses()
 	if len(addresses) == 0 {

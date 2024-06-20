@@ -10,8 +10,9 @@ import (
 	"github.com/erlendromo/PostenAPIRetriever/utils"
 )
 
+// Returns the complete json-response from Posten-API
 func NewPostenResponse(ctx context.Context, postalcode string) (*PostenResponse, error) {
-	subCtx, cancel := context.WithTimeout(ctx, time.Second*3)
+	subCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(subCtx, http.MethodGet, fmt.Sprintf("%s%s", utils.BASE_URL, postalcode), nil)
@@ -20,7 +21,7 @@ func NewPostenResponse(ctx context.Context, postalcode string) (*PostenResponse,
 	}
 
 	client := &http.Client{
-		Timeout: time.Millisecond * 500,
+		Timeout: time.Second * 2,
 	}
 
 	resp, err := client.Do(req)
